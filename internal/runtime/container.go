@@ -10,9 +10,10 @@ import (
 	util "github.com/troppes/portable-container-engine/internal/util"
 )
 
-func Run() {
+func Run(image string, command string) {
+
 	// restart myself with the child flag /proc/self/exe is a symbolic link to the current process
-	cmd := exec.Command("/proc/self/exe", append([]string{"container"}, os.Args[2:]...)...)
+	cmd := exec.Command("/proc/self/exe", "-image=container", "-command="+command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -28,8 +29,9 @@ func Run() {
 	util.Must(cmd.Run())
 }
 
-func CreateChildProcess() {
-	cmd := exec.Command(os.Args[2], os.Args[3:]...)
+func CreateChildProcess(command string) {
+	fmt.Println(command)
+	cmd := exec.Command(command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

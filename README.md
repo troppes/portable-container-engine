@@ -4,7 +4,7 @@
 ## How to Use
 
 ```
-go run main.go run COMMAND
+go run cmd/pce/main.go -image IMAGE -command COMMAND
 ```
 
 ## Not yet supported:
@@ -15,4 +15,4 @@ go run main.go run COMMAND
 
 ## Special Thanks
 
-Lizz Rice for the idea and base for this project: [https://github.com/lizrice/containers-from-scratch](https://github.com/lizrice/containers-from-scratch)
+Liz Rice for the idea and base for this project: [https://github.com/lizrice/containers-from-scratch](https://github.com/lizrice/containers-from-scratch)

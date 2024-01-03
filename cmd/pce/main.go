@@ -1,19 +1,24 @@
 package main
 
 import (
-	"os"
+	"flag"
 
-	engine "github.com/troppes/portable-container-engine/internal/engine"
+	engine "github.com/troppes/portable-container-engine/internal/runtime"
 )
 
 // go run main.go run <cmd> <args>
 func main() {
-	switch os.Args[1] {
-	case "run":
-		engine.Run()
-	case "container":
-		engine.CreateChildProcess()
-	default:
-		panic("Please enter a valid command")
+	var image string
+	var command string
+
+	flag.StringVar(&image, "image", "", "the image name")
+	flag.StringVar(&command, "command", "", "the command to run")
+	flag.Parse()
+
+	if image == "container" {
+		engine.CreateChildProcess(command)
+	} else {
+		engine.Run(image, command)
 	}
+
 }
