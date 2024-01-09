@@ -11,7 +11,6 @@ go run cmd/pce/main.go -image IMAGE -command COMMAND
 
 - not all namespaces
 - Cgroups
-- Image_Pulling
 
 ## Special Thanks
 

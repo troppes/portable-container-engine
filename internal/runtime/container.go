@@ -4,16 +4,23 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"syscall"
 
+	img "github.com/troppes/portable-container-engine/internal/image"
 	util "github.com/troppes/portable-container-engine/internal/util"
 )
 
-func Run(image string, command string) {
+func Run(image string, command []string) {
+
+	imagePath, err := img.DownloadAndExtract("docker.io/library/alpine:latest")
+	if err != nil {
+		panic(err)
+	}
 
 	// restart myself with the child flag /proc/self/exe is a symbolic link to the current process
-	cmd := exec.Command("/proc/self/exe", "-image=container", "-command="+command)
+	args := append([]string{"internalrun", imagePath}, command...)
+
+	cmd := exec.Command("/proc/self/exe", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -29,23 +36,22 @@ func Run(image string, command string) {
 	util.Must(cmd.Run())
 }
 
-func CreateChildProcess(command string) {
+func CreateChildProcess(path string, command []string) {
 	fmt.Println(command)
-	cmd := exec.Command(command)
+	fmt.Println(path)
+
+	var cmd *exec.Cmd
+	if len(command) > 1 {
+		cmd = exec.Command(command[0], command[1:]...)
+	} else {
+		cmd = exec.Command(command[0])
+	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	currentDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error getting current directory:", err)
-		return
-	}
-
-	absolutePath := filepath.Join(currentDir, "alpine")
-
 	util.Must(syscall.Sethostname([]byte("container")))
-	util.Must(syscall.Chroot(absolutePath))
+	util.Must(syscall.Chroot(path))
 	util.Must(os.Chdir("/"))
 	util.Must(syscall.Mount("proc", "proc", "proc", 0, ""))
 	//must(syscall.Mount("sys", "sys", "sys", 0, ""))

@@ -1,24 +1,43 @@
 package main
 
 import (
-	"flag"
+	"fmt"
+	"os"
 
-	engine "github.com/troppes/portable-container-engine/internal/runtime"
+	dl "github.com/troppes/portable-container-engine/internal/image"
+	pce "github.com/troppes/portable-container-engine/internal/runtime"
 )
 
 // go run main.go run <cmd> <args>
 func main() {
-	var image string
-	var command string
 
-	flag.StringVar(&image, "image", "", "the image name")
-	flag.StringVar(&command, "command", "", "the command to run")
-	flag.Parse()
+	args := os.Args
 
-	if image == "container" {
-		engine.CreateChildProcess(command)
-	} else {
-		engine.Run(image, command)
+	// Check if the number of arguments is at least 3 (program name + two arguments)
+	if len(args) < 4 {
+		fmt.Println("Please provide at least three arguments. Usage: pce <download|run> <image> <command>")
+		return
 	}
 
+	// Retrieve the first and second arguments
+	mode := args[1]
+	path := args[2]
+	command := args[3:]
+
+	if path == "" {
+		fmt.Println("Please provide an image path")
+		return
+	}
+
+	switch mode {
+	case "run":
+		pce.Run(path, command)
+	case "internalrun":
+		pce.CreateChildProcess(path, command)
+	case "download":
+		fmt.Printf("Downloading image %v\n", path)
+		dl.DownloadImage(path)
+	default:
+		fmt.Printf("Unknown command %v\n", mode)
+	}
 }
