@@ -4,7 +4,7 @@
 ## How to Use
 
 ```
-go run cmd/pce/main.go -image IMAGE -command COMMAND
+go run cmd/pce/main.go <run|download> <image> <command>
 ```
 
 ## Not yet supported:
