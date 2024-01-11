@@ -20,7 +20,7 @@ jobs:
         go-version: 1.21
 
     - name: Build
-      run: go build -o pce cmd/pce/main.go
+      run: GOOS=linux GOARCH=amd64 go build -o pce cmd/pce/main.go
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
