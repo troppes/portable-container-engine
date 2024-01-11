@@ -1,5 +1,6 @@
 # Portable Container Engine
 
+This project want to create a small executable that makes it possible to download and explore the file system of docker images. For this it has two main modes of operation: run and download. Run downloads an image (the full docker link is needed, i.e.: docker.io/library/alpine:latest), extracts the fs and runs it. The download command just downloads the full image and saves it as a tar file.
 
 ## How to Use
 
@@ -10,7 +11,8 @@ go run cmd/pce/main.go <run|download> <image> <command>
 ## Not yet supported:
 
 - not all namespaces
-- Cgroups
+- cGroups
+- does not run the docker intened command
 
 ## Special Thanks
 

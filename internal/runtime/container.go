@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	img "github.com/troppes/portable-container-engine/internal/image"
@@ -12,7 +13,7 @@ import (
 
 func Run(image string, command []string) {
 
-	imagePath, err := img.DownloadAndExtract("docker.io/library/alpine:latest")
+	imagePath, err := img.DownloadAndExtract(image)
 	if err != nil {
 		panic(err)
 	}
@@ -37,8 +38,8 @@ func Run(image string, command []string) {
 }
 
 func CreateChildProcess(path string, command []string) {
-	fmt.Println(command)
-	fmt.Println(path)
+	fmt.Println("Current command: " + strings.Join(command, " "))
+	fmt.Println("Current path on host:" + path)
 
 	var cmd *exec.Cmd
 	if len(command) > 1 {

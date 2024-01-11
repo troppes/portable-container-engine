@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -24,12 +23,10 @@ func DownloadImage(imageName string) (string, error) {
 		return "", err
 	}
 
-	re := regexp.MustCompile(`([^/]*):`) // match everythign after the last slash and before the tag
+	re := regexp.MustCompile(`([^/]*):`) // match everything after the last slash and before the tag
 	matches := re.FindStringSubmatch(ref.String())
 
 	if len(matches) != 2 {
-		fmt.Println(matches)
-		fmt.Println(ref.String())
 		panic("Image name not correctly found")
 	}
 

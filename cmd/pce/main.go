@@ -8,13 +8,12 @@ import (
 	pce "github.com/troppes/portable-container-engine/internal/runtime"
 )
 
-// go run main.go run <cmd> <args>
 func main() {
 
 	args := os.Args
 
 	// Check if the number of arguments is at least 3 (program name + two arguments)
-	if len(args) < 4 {
+	if args[1] != "download" && len(args) < 4 {
 		fmt.Println("Please provide at least three arguments. Usage: pce <download|run> <image> <command>")
 		return
 	}
@@ -36,7 +35,12 @@ func main() {
 		pce.CreateChildProcess(path, command)
 	case "download":
 		fmt.Printf("Downloading image %v\n", path)
-		dl.DownloadImage(path)
+		dlPath, err := dl.DownloadImage(path)
+		if err != nil {
+			fmt.Printf("Error downloading image %v\n", err)
+		} else {
+			fmt.Printf("Image downloaded to %v\n", dlPath)
+		}
 	default:
 		fmt.Printf("Unknown command %v\n", mode)
 	}
