@@ -1,0 +1,32 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.21
+
+    - name: Build
+      run: go build -o pce cmd/pce/main.go
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Upload Release Asset
+      uses: actions/upload-artifact@v2
+      with:
+        name: pce
+        path: ./pce
