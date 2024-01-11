@@ -38,6 +38,10 @@ func ExtractImage(r io.Reader, dest string) error {
 				return fmt.Errorf("ExtractTar: Copy() failed: %s", err.Error())
 			}
 			outFile.Close()
+			err = os.Chmod(target, 0755)
+			if err != nil {
+				return fmt.Errorf("ExtractTar: Chmod() failed: %s", err.Error())
+			}
 		case tar.TypeSymlink:
 			err := os.Symlink(header.Linkname, target)
 			if err != nil {
