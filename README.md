@@ -5,7 +5,14 @@ This project want to create a small executable that makes it possible to downloa
 ## How to Use
 
 ```
-go run cmd/pce/main.go <run|download> <image> <command>
+go run cmd/pce/main.go <run|download> <image> <command> [-x]
+```
+
+Example:
+
+Download and Extract Alpine
+```
+go run cmd/pce/main.go download alpine:latest -x
 ```
 
 ## Not yet supported:
