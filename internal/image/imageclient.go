@@ -1,7 +1,6 @@
 package image
 
 import (
-	"log"
 	"os"
 	"regexp"
 
@@ -11,69 +10,51 @@ import (
 	tarball "github.com/google/go-containerregistry/pkg/v1/tarball"
 )
 
-func DownloadImage(imageName string) (string, error) {
+func RetrieveImage(imageName string, extract bool) (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
 	ref, img, err := download(imageName)
-
 	if err != nil {
 		return "", err
 	}
 
-	re := regexp.MustCompile(`([^/]*):`) // match everything after the last slash and before the tag
+	re := regexp.MustCompile(`(?:.+/)?([^:@]+)(?::.+)?`)
 	matches := re.FindStringSubmatch(ref.String())
-
 	if len(matches) != 2 {
 		panic("Image name not correctly found")
 	}
 
-	savePath := dir + "/" + matches[1] + ".tar"
+	baseName := matches[1]
 
-	err = tarball.WriteToFile(savePath, ref, img)
-	if err != nil {
-		return "", err
+	if !extract {
+		// Save image tarball
+		savePath := dir + "/" + baseName + ".tar"
+		err = tarball.WriteToFile(savePath, ref, img)
+		if err != nil {
+			return "", err
+		}
+		return savePath, nil
 	}
 
-	return savePath, nil
-}
-
-func DownloadAndExtract(imageName string) (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	ref, img, err := download(imageName)
-	if err != nil {
-		return "", err
-	}
-
-	re := regexp.MustCompile(`.*/(.+):`)
-	matches := re.FindStringSubmatch(ref.String())
-
-	if len(matches) != 2 {
-		panic("Image name not found")
-	}
-
-	savePath := dir + "/" + matches[1]
-
+	// Extract image layers
+	savePath := dir + "/" + baseName
 	layers, err := img.Layers()
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	for _, layer := range layers {
 		r, err := layer.Uncompressed()
 		if err != nil {
-			log.Fatal(err)
+			return "", err
 		}
 
 		err = ExtractImage(r, savePath)
 		if err != nil {
-			log.Fatal(err)
+			return "", err
 		}
 	}
 

@@ -13,7 +13,7 @@ import (
 
 func Run(image string, command []string) {
 
-	imagePath, err := img.DownloadAndExtract(image)
+	imagePath, err := img.RetrieveImage(image, true)
 	if err != nil {
 		panic(err)
 	}
