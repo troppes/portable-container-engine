@@ -9,6 +9,17 @@ import (
 )
 
 func ExtractImage(r io.Reader, dest string) error {
+	if err := os.MkdirAll(dest, 0755); err != nil {
+		return fmt.Errorf("ExtractTar: MkdirAll() failed: %s", err.Error())
+	}
+
+	root, err := os.OpenRoot(dest)
+	if err != nil {
+		return fmt.Errorf("ExtractTar: OpenRoot() failed: %s", err.Error())
+	}
+
+	defer root.Close()
+
 	tarReader := tar.NewReader(r)
 
 	for {
@@ -22,30 +33,34 @@ func ExtractImage(r io.Reader, dest string) error {
 			return fmt.Errorf("ExtractTar: Next() failed: %s", err.Error())
 		}
 
-		target := filepath.Join(dest, header.Name)
+		target := filepath.Clean(header.Name)
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if err := os.MkdirAll(target, 0755); err != nil {
+			if err := root.Mkdir(target, 0755); err != nil {
 				return fmt.Errorf("ExtractTar: Mkdir() failed: %s", err.Error())
 			}
 		case tar.TypeReg:
-			outFile, err := os.Create(target)
+			if dir := filepath.Dir(target); dir != "." {
+				if err := root.Mkdir(dir, 0755); err != nil && !os.IsExist(err) {
+					return fmt.Errorf("ExtractTar: Mkdir() failed: %s", err.Error())
+				}
+			}
+
+			outFile, err := root.Create(target)
 			if err != nil {
 				return fmt.Errorf("ExtractTar: Create() failed: %s", err.Error())
 			}
+
 			if _, err := io.Copy(outFile, tarReader); err != nil {
+				outFile.Close()
 				return fmt.Errorf("ExtractTar: Copy() failed: %s", err.Error())
 			}
 			outFile.Close()
-			err = os.Chmod(target, 0755)
-			if err != nil {
-				return fmt.Errorf("ExtractTar: Chmod() failed: %s", err.Error())
-			}
+
 		case tar.TypeSymlink:
-			err := os.Symlink(header.Linkname, target)
-			if err != nil {
-				return fmt.Errorf("ExtractTar: Symlink() failed: %s", err.Error())
+			if err := root.Symlink(header.Linkname, header.Name); err != nil {
+				return fmt.Errorf("ExtractTar: Symlink() failed: %w", err)
 			}
 		default:
 			return fmt.Errorf(
