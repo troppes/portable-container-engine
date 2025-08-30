@@ -5,28 +5,73 @@ on:
     tags:
       - "v*.*"
   workflow_dispatch:
-  
-jobs:
-  build:
-    runs-on: ubuntu-latest
 
+jobs:
+  test:
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: 1.21
+        go-version: 1.25
 
-    - name: Build
-      run: GOOS=linux GOARCH=amd64 go build -o pce cmd/pce/main.go
+    - name: Run tests
+      run: make test
 
-    - name: Upload binaries to release
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.25
+
+    - name: Build all platforms
+      run: make build-all
+
+    - name: Upload Linux binary
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: pce
-        asset_name: pce
+        file: bin/pce-linux-amd64
+        asset_name: pce-linux-amd64
+        tag: ${{ github.ref }}
+        overwrite: true
+
+    - name: Upload Windows binary
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: bin/pce-windows-amd64.exe
+        asset_name: pce-windows-amd64.exe
+        tag: ${{ github.ref }}
+        overwrite: true
+
+    - name: Upload macOS (Intel) binary
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: bin/pce-darwin-amd64
+        asset_name: pce-darwin-amd64
+        tag: ${{ github.ref }}
+        overwrite: true
+
+    - name: Upload macOS (Apple Silicon) binary
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: bin/pce-darwin-arm64
+        asset_name: pce-darwin-arm64
         tag: ${{ github.ref }}
         overwrite: true
