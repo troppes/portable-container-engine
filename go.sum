@@ -33,6 +33,8 @@ github.com/google/go-containerregistry v0.17.0 h1:5p+zYs/R4VGHkhyvgWurWrpJ2hW4Vv
 github.com/google/go-containerregistry v0.17.0/go.mod h1:u0qB2l7mvtWVR5kNcbFIhFY1hLbf8eeGapA+vbFDCtQ=
 github.com/google/go-containerregistry v0.20.6 h1:cvWX87UxxLgaH76b4hIvya6Dzz9qHB31qAwjAohdSTU=
 github.com/google/go-containerregistry v0.20.6/go.mod h1:T0x8MuoAoKX/873bkeSfLD2FAkwCDf9/HZgsFJ02E2Y=
+github.com/google/safeopen v0.0.0-20240125081138-66b54d5181c6 h1:XBC2BmsUTvyeeahMA2wdvIaaKpYrr7za7F6lNK+0oL8=
+github.com/google/safeopen v0.0.0-20240125081138-66b54d5181c6/go.mod h1:D59KewtQCiD2Avi8N/v2zb/xTYaefwJl+ux2ejB58GQ=
 github.com/klauspost/compress v1.16.5 h1:IFV2oUNUzZaz+XyusxpLzpzS8Pt5rh0Z16For/djlyI=
 github.com/klauspost/compress v1.16.5/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
 github.com/klauspost/compress v1.18.0 h1:c/Cqfb0r+Yi+JtIEq73FWXVkRonBlf0CRNYc8Zttxdo=

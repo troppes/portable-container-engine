@@ -12,6 +12,7 @@ require (
 	github.com/docker/docker v28.3.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/google/safeopen v0.0.0-20240125081138-66b54d5181c6 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/magefile/mage v1.14.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
