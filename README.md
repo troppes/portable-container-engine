@@ -2,6 +2,8 @@
 
 A lightweight, cross-platform tool to download and extract Docker containers without requiring Docker installation. PCE furthermore provides a simple and efficient way to run containers on Linux while maintaining a minimal footprint.
 
+!Warning this is an repo to play around with containers, there are no proper safeguards used against container breaches. Do not run this with unsafe containers!
+
 ## Features
 
 - 🐳 Run Docker containers without Docker installation
@@ -29,9 +31,16 @@ The binary will be available in the `bin/` directory.
 pce download alpine:latest
 ```
 
+Downloads are safed inside a folder called `pce-download`
+
 2. Run a container:
 ```bash
 pce run alpine:latest /bin/sh
+```
+
+If not command is specified the default command of the container is used:
+```bash
+go run cmd/pce/main.go run ghcr.io/patrickdappollonio/docker-http-server
 ```
 
 ## Development
@@ -95,7 +104,7 @@ docker-compose up
 
 - Limited namespace support (not all Linux namespaces are implemented)
 - No cgroups support yet
-- No network support or support for running the default command of the container
+- No network namespace support
 
 ## Contributing
 
