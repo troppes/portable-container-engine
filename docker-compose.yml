@@ -1,0 +1,8 @@
+services:
+  pce:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    privileged: true # Required for container operations
