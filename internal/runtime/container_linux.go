@@ -3,75 +3,75 @@
 package runtime
 
 import (
-    "fmt"
-    "os"
-    "os/exec"
-    "strings"
-    "syscall"
+	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+	"syscall"
 
-    img "github.com/troppes/portable-container-engine/internal/image"
-    util "github.com/troppes/portable-container-engine/internal/util"
+	img "github.com/troppes/portable-container-engine/internal/image"
+	util "github.com/troppes/portable-container-engine/internal/util"
 )
 
 type platformRuntime struct{}
 
 func (r *platformRuntime) Run(image string, command []string) error {
-    if err := util.CheckPlatformSupport(); err != nil {
-        return err
-    }
+	if err := util.CheckPlatformSupport(); err != nil {
+		return err
+	}
 
-    imagePath, err := img.RetrieveImage(image, true)
-    if err != nil {
-        return err
-    }
+	imagePath, err := img.RetrieveImage(image, true)
+	if err != nil {
+		return err
+	}
 
-    // restart myself with the child flag /proc/self/exe is a symbolic link to the current process
-    args := append([]string{"internalrun", imagePath}, command...)
+	// restart myself with the child flag /proc/self/exe is a symbolic link to the current process
+	args := append([]string{"internalrun", imagePath}, command...)
 
-    cmd := exec.Command("/proc/self/exe", args...)
-    cmd.Stdin = os.Stdin
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    cmd.SysProcAttr = &syscall.SysProcAttr{
-        // NEWNS => used for mounting
-        Cloneflags:   syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
-        Credential:   &syscall.Credential{Uid: 0, Gid: 0},                                    // make root in container
-        UidMappings:  []syscall.SysProcIDMap{{ContainerID: 0, HostID: os.Getuid(), Size: 1}}, // outside of container be the user
-        GidMappings:  []syscall.SysProcIDMap{{ContainerID: 0, HostID: os.Getgid(), Size: 1}},
-        Unshareflags: syscall.CLONE_NEWNS, // remove the other mounts
-    }
+	cmd := exec.Command("/proc/self/exe", args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		// NEWNS => used for mounting
+		Cloneflags:   syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
+		Credential:   &syscall.Credential{Uid: 0, Gid: 0},                                    // make root in container
+		UidMappings:  []syscall.SysProcIDMap{{ContainerID: 0, HostID: os.Getuid(), Size: 1}}, // outside of container be the user
+		GidMappings:  []syscall.SysProcIDMap{{ContainerID: 0, HostID: os.Getgid(), Size: 1}},
+		Unshareflags: syscall.CLONE_NEWNS, // remove the other mounts
+	}
 
-    if err := cmd.Run(); err != nil {
-        return err
-    }
-    return nil
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *platformRuntime) CreateChildProcess(path string, command []string) error {
-    if err := util.CheckPlatformSupport(); err != nil {
-        return err
-    }
-    fmt.Println("Current command: " + strings.Join(command, " "))
-    fmt.Println("Current path on host:" + path)
+	if err := util.CheckPlatformSupport(); err != nil {
+		return err
+	}
+	fmt.Println("Current command: " + strings.Join(command, " "))
+	fmt.Println("Current path on host:" + path)
 
-    var cmd *exec.Cmd
-    if len(command) > 1 {
-        cmd = exec.Command(command[0], command[1:]...)
-    } else {
-        cmd = exec.Command(command[0])
-    }
-    cmd.Stdin = os.Stdin
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
+	var cmd *exec.Cmd
+	if len(command) > 1 {
+		cmd = exec.Command(command[0], command[1:]...)
+	} else {
+		cmd = exec.Command(command[0])
+	}
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-    util.Must(syscall.Sethostname([]byte("container")))
-    util.Must(syscall.Chroot(path))
-    util.Must(os.Chdir("/"))
-    util.Must(syscall.Mount("proc", "proc", "proc", 0, ""))
+	util.Must(syscall.Sethostname([]byte("container")))
+	util.Must(syscall.Chroot(path))
+	util.Must(os.Chdir("/"))
+	util.Must(syscall.Mount("proc", "proc", "proc", 0, ""))
 
-    util.Must(cmd.Run())
+	util.Must(cmd.Run())
 
-    util.Must(syscall.Unmount("proc", 0))
+	util.Must(syscall.Unmount("proc", 0))
 
-    return nil
+	return nil
 }
