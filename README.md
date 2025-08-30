@@ -1,22 +1,46 @@
-# Portable Container Engine
+# Portable Container Engine (PCE)
 
-A lightweight tool to download and run Docker containers without Docker.
+A lightweight, cross-platform tool to download and extract Docker containers without requiring Docker installation. PCE furthermore provides a simple and efficient way to run containers on Linux while maintaining a minimal footprint.
+
+## Features
+
+- 🐳 Run Docker containers without Docker installation
+- 🔄 Partial Cross-platform support (Linux, Windows, macOS)
+- 📦 Download and extract Docker images
+- 🔒 Containerization using native Linux OS features
+- 🚀 Simple and lightweight implementation
 
 ## Quick Start
 
-```bash
-# Download and extract an image
-go run cmd/pce/main.go download alpine:latest -x
+### Installation
 
-# Run a container
-go run cmd/pce/main.go run ubuntu:latest /bin/bash
+Download the latest binary for your platform from the releases page or build from source:
+
+```bash
+make build
+```
+
+The binary will be available in the `bin/` directory.
+
+### Basic Usage
+
+1. Download a Docker image:
+```bash
+pce download alpine:latest
+```
+
+2. Run a container:
+```bash
+pce run alpine:latest /bin/sh
 ```
 
 ## Development
 
 ### Prerequisites
-- VS Code with Remote-Containers extension
-- Docker
+- Go 1.25 or higher
+- Make
+- VS Code with Remote-Containers extension (for development) or Linux OS
+- Docker (for development environment)
 
 ### Setup Development Environment
 
@@ -24,7 +48,7 @@ go run cmd/pce/main.go run ubuntu:latest /bin/bash
 2. Open in VS Code
 3. Click "Reopen in Container" when prompted
 
-### Build
+### Building
 
 ```bash
 # Local build
@@ -38,7 +62,7 @@ make clean
 make test
 ```
 
-### Run in Docker
+### Development in Docker
 
 ```bash
 # Build container
@@ -53,19 +77,38 @@ docker-compose up
 ```
 ├── bin/           # Compiled binaries
 ├── cmd/           # Application entrypoints
+│   └── pce/       # Main application code
 ├── internal/      # Private application code
-│   ├── image/     # Image management
-│   ├── runtime/   # Container runtime
-│   └── util/      # Utility functions
-└── Makefile       # Build automation
+│   ├── image/     # Image management and Docker registry client
+│   ├── runtime/   # Platform-specific container runtime implementations
+│   └── util/      # Shared utility functions
+└── Makefile      # Build automation
 ```
 
-## Not yet supported:
+## Implementation Details
 
-- not all namespaces
-- cGroups
-- does not run the docker intended command
+- **Image Management**: Handles downloading and extracting Docker images from registries
+- **Container Runtime**: Implementation for container isolation under Linux
+- **Partial Cross-Platform Support**: Download and Extract container images on all platforms
+
+## Current Limitations
+
+- Limited namespace support (not all Linux namespaces are implemented)
+- No cgroups support yet
+- No network support or support for running the default command of the container
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Commit your changes: `git commit -am 'Add new feature'`
+4. Push to the branch: `git push origin feature/my-feature`
+5. Submit a pull request
 
 ## Special Thanks
 
-Liz Rice for the idea and base for this project: [https://github.com/lizrice/containers-from-scratch](https://github.com/lizrice/containers-from-scratch)
+This project was inspired by and builds upon the work of Liz Rice's [containers-from-scratch](https://github.com/lizrice/containers-from-scratch) project.
+
+## License
+
+[MIT License](LICENSE)
