@@ -19,7 +19,6 @@ func TestExtractImage(t *testing.T) {
 	tests := []struct {
 		name      string
 		tarFiles  []tarFile
-		wantErr   bool
 		checkFunc func(t *testing.T, dir string)
 	}{
 		{
@@ -98,7 +97,40 @@ func TestExtractImage(t *testing.T) {
 			},
 		},
 		{
-			name: "Path traversal attempt",
+			name: "Duplicate symlinks are handled gracefully",
+			tarFiles: []tarFile{
+				{
+					name:     "target.txt",
+					typeflag: tar.TypeReg,
+					content:  []byte("target content"),
+					mode:     0644,
+				},
+				{
+					name:     "link.txt",
+					typeflag: tar.TypeSymlink,
+					linkname: "target.txt",
+				},
+				{
+					name:     "link.txt", // Duplicate symlink
+					typeflag: tar.TypeSymlink,
+					linkname: "target.txt",
+				},
+			},
+			checkFunc: func(t *testing.T, dir string) {
+				// Check symlink was created successfully (last one wins)
+				link := filepath.Join(dir, "link.txt")
+				target, err := os.Readlink(link)
+				if err != nil {
+					t.Errorf("failed to read symlink: %v", err)
+					return
+				}
+				if target != "target.txt" {
+					t.Errorf("symlink points to %q, want %q", target, "target.txt")
+				}
+			},
+		},
+		{
+			name: "Path traversal attempts are ignored",
 			tarFiles: []tarFile{
 				{
 					name:     "../outside.txt",
@@ -106,8 +138,37 @@ func TestExtractImage(t *testing.T) {
 					content:  []byte("should not exist"),
 					mode:     0644,
 				},
+				{
+					name:     "normal.txt",
+					typeflag: tar.TypeReg,
+					content:  []byte("normal content"),
+					mode:     0644,
+				},
 			},
-			wantErr: true,
+			checkFunc: func(t *testing.T, dir string) {
+				// Verify the traversal file was NOT created outside the extraction directory
+				outsidePath := filepath.Join(filepath.Dir(dir), "outside.txt")
+				if _, err := os.Stat(outsidePath); !os.IsNotExist(err) {
+					t.Error("path traversal file was created outside extraction directory")
+				}
+
+				// Also verify it wasn't created inside the extraction directory
+				insidePath := filepath.Join(dir, "outside.txt")
+				if _, err := os.Stat(insidePath); !os.IsNotExist(err) {
+					t.Error("path traversal file was created inside extraction directory")
+				}
+
+				// But normal files should still be extracted
+				normalPath := filepath.Join(dir, "normal.txt")
+				content, err := os.ReadFile(normalPath)
+				if err != nil {
+					t.Errorf("failed to read normal file: %v", err)
+					return
+				}
+				if string(content) != "normal content" {
+					t.Errorf("normal file content mismatch, got %q, want %q", string(content), "normal content")
+				}
+			},
 		},
 		{
 			name: "Deep directory structure",
@@ -146,6 +207,52 @@ func TestExtractImage(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "Hard links are handled",
+			tarFiles: []tarFile{
+				{
+					name:     "original.txt",
+					typeflag: tar.TypeReg,
+					content:  []byte("original content"),
+					mode:     0644,
+				},
+				{
+					name:     "hardlink.txt",
+					typeflag: tar.TypeLink,
+					linkname: "original.txt",
+				},
+			},
+			checkFunc: func(t *testing.T, dir string) {
+				// Check both files exist
+				original := filepath.Join(dir, "original.txt")
+				hardlink := filepath.Join(dir, "hardlink.txt")
+
+				if _, err := os.Stat(original); os.IsNotExist(err) {
+					t.Error("original file was not created")
+				}
+
+				if _, err := os.Stat(hardlink); os.IsNotExist(err) {
+					t.Error("hard link was not created")
+				}
+
+				// Check content is accessible through both paths
+				content1, err := os.ReadFile(original)
+				if err != nil {
+					t.Errorf("failed to read original file: %v", err)
+					return
+				}
+
+				content2, err := os.ReadFile(hardlink)
+				if err != nil {
+					t.Errorf("failed to read hard link: %v", err)
+					return
+				}
+
+				if string(content1) != string(content2) {
+					t.Errorf("hard link content differs from original")
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -169,12 +276,6 @@ func TestExtractImage(t *testing.T) {
 
 			err := ExtractImage(&buf, testDir)
 
-			if tt.wantErr {
-				if err == nil {
-					t.Error("expected error but got none")
-				}
-				return
-			}
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
 				return

@@ -1,7 +1,7 @@
 package image
 
 import (
-	"os"
+	"path/filepath"
 	"regexp"
 
 	name "github.com/google/go-containerregistry/pkg/name"
@@ -10,15 +10,13 @@ import (
 	tarball "github.com/google/go-containerregistry/pkg/v1/tarball"
 )
 
-func RetrieveImage(imageName string, extract bool) (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
+func RetrieveImage(imageName string, extract bool, basePath string) (string, *v1.ConfigFile, error) {
+	// Use the provided basePath instead of current working directory
+	dir := basePath
 
 	ref, img, err := download(imageName)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	re := regexp.MustCompile(`(?:.+/)?([^:@]+)(?::.+)?`)
@@ -31,34 +29,39 @@ func RetrieveImage(imageName string, extract bool) (string, error) {
 
 	if !extract {
 		// Save image tarball
-		savePath := dir + "/" + baseName + ".tar"
+		savePath := filepath.Join(dir, baseName+".tar")
 		err = tarball.WriteToFile(savePath, ref, img)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
-		return savePath, nil
+		return savePath, nil, nil
 	}
 
 	// Extract image layers
-	savePath := dir + "/" + baseName
+	savePath := filepath.Join(dir, baseName)
 	layers, err := img.Layers()
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	for _, layer := range layers {
 		r, err := layer.Uncompressed()
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 
 		err = ExtractImage(r, savePath)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 	}
 
-	return savePath, nil
+	configFile, err := img.ConfigFile()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return savePath, configFile, nil
 }
 
 func download(imageName string) (name.Reference, v1.Image, error) {
@@ -78,5 +81,4 @@ func download(imageName string) (name.Reference, v1.Image, error) {
 	}
 
 	return ref, img, nil
-
 }

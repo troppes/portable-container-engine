@@ -74,6 +74,11 @@ func TestMainIntegration(t *testing.T) {
 			wantOut: "hello from container",
 		},
 		{
+			name:    "Run container with default command",
+			args:    []string{"run", "hello-world:latest"},
+			wantOut: "Hello from Docker!",
+		},
+		{
 			name:    "Invalid command",
 			args:    []string{"invalid"},
 			wantOut: "Usage: pce <download|run> <image> [<command>...]",

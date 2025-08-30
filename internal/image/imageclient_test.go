@@ -76,16 +76,6 @@ func TestRetrieveImage(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// Save current directory and change to temp dir
-	originalWd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
-	}
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("failed to change to temp directory: %v", err)
-	}
-	defer os.Chdir(originalWd)
-
 	tests := []struct {
 		name        string
 		imageName   string
@@ -134,7 +124,7 @@ func TestRetrieveImage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			path, err := RetrieveImage(tt.imageName, tt.extract)
+			path, _, err := RetrieveImage(tt.imageName, tt.extract, tmpDir)
 
 			if tt.wantErr {
 				if err == nil {
