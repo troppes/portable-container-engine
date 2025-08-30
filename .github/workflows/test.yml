@@ -20,5 +20,10 @@ jobs:
       with:
         go-version: 1.25
 
-    - name: Run tests
-      run: make test
+    - name: Run unit tests
+      run: make test-unit
+
+    # Run integration tests only on pull requests to main
+    - name: Run integration tests
+      if: github.event_name == 'pull_request' && github.base_ref == 'main'
+      run: make test-integration
