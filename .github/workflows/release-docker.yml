@@ -33,11 +33,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value={{date 'YYYY.MM'}},enable={{is_default_branch}}
+            type=match,pattern=\d{4}\.\d{2}\.\d+,group=0
+            type=match,pattern=\d{4}\.\d{2},group=0
             type=sha,format=long
             type=ref,event=branch
-            latest
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
