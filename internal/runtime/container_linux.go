@@ -16,10 +16,6 @@ import (
 type platformRuntime struct{}
 
 func (r *platformRuntime) Run(image string, command []string) error {
-	if err := util.CheckPlatformSupport(); err != nil {
-		return err
-	}
-
 	imagePath, err := img.RetrieveImage(image, true)
 	if err != nil {
 		return err
@@ -48,9 +44,6 @@ func (r *platformRuntime) Run(image string, command []string) error {
 }
 
 func (r *platformRuntime) CreateChildProcess(path string, command []string) error {
-	if err := util.CheckPlatformSupport(); err != nil {
-		return err
-	}
 	fmt.Println("Current command: " + strings.Join(command, " "))
 	fmt.Println("Current path on host:" + path)
 

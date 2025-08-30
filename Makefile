@@ -37,10 +37,18 @@ build-darwin-arm64:
 	@echo "Building for macOS (arm64)..."
 	@GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-darwin-arm64 cmd/pce/main.go
 
-# Run tests
-test:
-	@echo "Running tests..."
-	@go test -v ./...
+# Run all tests
+test: test-unit test-integration
+
+# Run unit tests only
+test-unit:
+	@echo "Running unit tests..."
+	@go test -v -skip Integration ./...
+
+# Run integration tests only
+test-integration:
+	@echo "Running integration tests..."
+	@go test -v -run Integration ./...
 
 # Clean build artifacts
 clean:
