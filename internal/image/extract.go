@@ -6,76 +6,67 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/google/safeopen"
 )
 
 func ExtractImage(r io.Reader, dest string) error {
-	tarReader := tar.NewReader(r)
-
-	absDest, err := filepath.Abs(dest)
-	if err != nil {
-		return fmt.Errorf("ExtractTar: failed to get absolute path of destination: %w", err)
+	if err := os.MkdirAll(dest, 0755); err != nil {
+		return fmt.Errorf("ExtractTar: MkdirAll() failed: %s", err.Error())
 	}
+
+	root, err := os.OpenRoot(dest)
+	if err != nil {
+		return fmt.Errorf("ExtractTar: OpenRoot() failed: %s", err.Error())
+	}
+
+	defer root.Close()
+
+	tarReader := tar.NewReader(r)
 
 	for {
 		header, err := tarReader.Next()
+
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
-			return fmt.Errorf("ExtractTar: Next() failed: %w", err)
+			return fmt.Errorf("ExtractTar: Next() failed: %s", err.Error())
 		}
+
+		target := filepath.Clean(header.Name)
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			dirPath := filepath.Join(absDest, header.Name)
-			if err := os.MkdirAll(dirPath, 0o755); err != nil {
-				return fmt.Errorf("ExtractTar: MkdirAll() failed: %w", err)
+			if err := root.Mkdir(target, 0755); err != nil {
+				return fmt.Errorf("ExtractTar: Mkdir() failed: %s", err.Error())
+			}
+		case tar.TypeReg:
+			if dir := filepath.Dir(target); dir != "." {
+				if err := root.Mkdir(dir, 0755); err != nil && !os.IsExist(err) {
+					return fmt.Errorf("ExtractTar: Mkdir() failed: %s", err.Error())
+				}
 			}
 
-		case tar.TypeReg:
-			outFile, err := safeopen.CreateBeneath(absDest, header.Name)
+			outFile, err := root.Create(target)
 			if err != nil {
-				return fmt.Errorf("ExtractTar: CreateBeneath() failed: %w", err)
+				return fmt.Errorf("ExtractTar: Create() failed: %s", err.Error())
 			}
 
 			if _, err := io.Copy(outFile, tarReader); err != nil {
 				outFile.Close()
-				return fmt.Errorf("ExtractTar: Copy() failed: %w", err)
+				return fmt.Errorf("ExtractTar: Copy() failed: %s", err.Error())
 			}
-
-			if err := outFile.Chmod(0o755); err != nil {
-				outFile.Close()
-				return fmt.Errorf("ExtractTar: Chmod() failed: %w", err)
-			}
-
 			outFile.Close()
 
 		case tar.TypeSymlink:
-			symlinkLocation := filepath.Join(absDest, header.Name)
-			linkTarget := filepath.Clean(header.Linkname)
-
-			resolvedTarget := filepath.Join(filepath.Dir(symlinkLocation), linkTarget)
-			absResolvedTarget, err := filepath.Abs(resolvedTarget)
-			if err != nil {
-				return fmt.Errorf("ExtractTar: failed to resolve symlink target: %w", err)
-			}
-
-			destSeparator := absDest + string(filepath.Separator)
-			if !strings.HasPrefix(absResolvedTarget, destSeparator) && absResolvedTarget != absDest {
-				return fmt.Errorf("ExtractTar: symlink target escapes destination directory: %s -> %s",
-					header.Name, header.Linkname)
-			}
-
-			if err := os.Symlink(header.Linkname, symlinkLocation); err != nil {
+			if err := root.Symlink(header.Linkname, header.Name); err != nil {
 				return fmt.Errorf("ExtractTar: Symlink() failed: %w", err)
 			}
-
 		default:
-			return fmt.Errorf("ExtractTar: unsupported file type: %c in %s",
-				header.Typeflag, header.Name)
+			return fmt.Errorf(
+				"ExtractTar: unknown type: %s in %s",
+				string(header.Typeflag),
+				header.Name)
 		}
 	}
 
