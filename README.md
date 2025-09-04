@@ -38,7 +38,7 @@ Downloads are safed inside a folder called `pce-download`
 pce run alpine:latest /bin/sh
 ```
 
-If not command is specified the default command of the container is used:
+If no command is specified the default command of the container is used:
 ```bash
 go run cmd/pce/main.go run ghcr.io/patrickdappollonio/docker-http-server
 ```
