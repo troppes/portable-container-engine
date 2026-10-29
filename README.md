@@ -1,16 +1,16 @@
 # Portable Container Engine (PCE)
 
-A lightweight, cross-platform tool to download and extract Docker containers without requiring Docker installation. PCE furthermore provides a simple and efficient way to run containers on Linux while maintaining a minimal footprint.
+A lightweight, cross-platform tool for downloading and running Docker containers without installing Docker. PCE runs containers directly on Linux using native OS features, keeping the whole thing small and dependency-free.
 
-!Warning this is an repo to play around with containers, there are no proper safeguards used against container breaches. Do not run this with unsafe containers!
+**Warning:** this is a repo for experimenting with containers. It has no real safeguards against container breakouts, so don't run untrusted containers with it.
 
 ## Features
 
-- 🐳 Run Docker containers without Docker installation
-- 🔄 Partial Cross-platform support (Linux, Windows, macOS)
-- 📦 Download and extract Docker images
-- 🔒 Containerization using native Linux OS features
-- 🚀 Simple and lightweight implementation
+- Run Docker containers without a Docker installation
+- Download and extract Docker images
+- Containerization using native Linux OS features
+- Partial cross-platform support (Linux, Windows, macOS)
+- Simple, lightweight implementation
 
 ## Quick Start
 
@@ -31,7 +31,7 @@ The binary will be available in the `bin/` directory.
 pce download alpine:latest
 ```
 
-Downloads are safed inside a folder called `pce-download`
+Downloads are saved inside a folder called `pce-download`.
 
 2. Run a container:
 ```bash
